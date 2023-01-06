@@ -4,6 +4,7 @@ import "./IERC20.sol";
 
 contract SaleToken{
     address Owner;
+    uint256 public tokenSolds;
     uint constant public firstPhaseFee = 0.005 ether; 
     uint constant public secondPhaseFee = 0.01 ether;
     uint constant public thirdPhaseFee = 0.1 ether;
@@ -28,7 +29,8 @@ contract SaleToken{
        if(block.timestamp <= startTime + 2592000 seconds){ 
             require(msg.value >= firstPhaseFee,"Your amount is less than token price"); 
             noOfTokens = msg.value/ firstPhaseFee;
-             reminder =msg.value - (noOfTokens*firstPhaseFee);
+            tokenSolds +=noOfTokens;
+            reminder =msg.value - (noOfTokens*firstPhaseFee);
 
             ierc20.mintTo(msg.sender,noOfTokens);  
             (bool success,)=msg.sender.call{value:reminder}("");
@@ -38,7 +40,8 @@ contract SaleToken{
        }else if(block.timestamp <= startTime + 5184000 seconds){ 
             require(msg.value >= secondPhaseFee,"Your amount is less than token price");
             noOfTokens = msg.value/ secondPhaseFee;
-             reminder =msg.value - (noOfTokens*secondPhaseFee);
+            tokenSolds +=noOfTokens;
+            reminder =msg.value - (noOfTokens*secondPhaseFee);
             ierc20.mintTo(msg.sender,noOfTokens);
             (bool success,)=msg.sender.call{value:reminder}("");
             require(success,"Error");
@@ -48,13 +51,20 @@ contract SaleToken{
             require(msg.value >= thirdPhaseFee,"Your amount is less than token price");
             noOfTokens = msg.value/ thirdPhaseFee;
             ierc20.mintTo(msg.sender,noOfTokens);
-             reminder =msg.value - (noOfTokens*thirdPhaseFee);
+            tokenSolds +=noOfTokens;
+            reminder =msg.value - (noOfTokens*thirdPhaseFee);
             (bool success,)=msg.sender.call{value:reminder}("");
             require(success,"Error");
        }
   
      emit _buyToken(block.timestamp, msg.sender, msg.value,noOfTokens,reminder);
       
+    }
+    function endSale() public {
+        require(msg.sender == Owner);
+        require(ierc20.transfer(owner, ierc20.balanceOf(this)));
+
+        selfdestruct(payable(Owner));
     }
 
 
